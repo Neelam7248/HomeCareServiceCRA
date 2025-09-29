@@ -4,165 +4,194 @@ import axios from "axios";
 import { getToken } from "../../utils/auth";
 
 const SendOfferButton = ({
+  clientId,
   candidateId,
   jobId,
-  offerId, // Pass offerId if responding to negotiation
-  maxBudget,
-  serviceType,
-  currentStatus,
+  offerId,
+  offeredSalary,
   preferredChargesType,
-  disabled = false,
-  negotiationCount = 0,
-  onStatusChange, // callback to update parent state
-  candidateRequestedSalary, // NEW: actual salary requested by candidate
+  serviceType,
+   clientCounterSalary,
+    finalSalary,  
+  negotiationCount,
+  currentStatus,
+  //offers, // map of all offers keyed by candidateId
+  onStatusChange // callback to update parent offers
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(currentStatus);
-  const [showNegotiationModal, setShowNegotiationModal] = useState(false);
-  const [counterAmount, setCounterAmount] = useState("");
-
-  const canNegotiate = negotiationCount < 3; // limit negotiations
   const token = getToken();
+  const [status, setStatus] = useState(currentStatus || "Not Offered");
+  const [showModal, setShowModal] = useState(false);
+  const [counterSalary, setCounterSalary] = useState("");
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     if (currentStatus) setStatus(currentStatus);
   }, [currentStatus]);
 
-  // Send a new offer to candidate
+  // -------------------------
+  // Sync status and counterSalary from offers map
+  // -------------------------
+  // -------------------------
+  // Send initial offer
+  // -------------------------
   const handleSendOffer = async () => {
-    if (!token) return alert("User not authenticated");
-
-    setLoading(true);
     try {
+      setLoading(true);
       const res = await axios.post(
-        "/api/offers",
-        { candidateId, jobId, preferredChargesType, serviceType, maxBudget },
+        "http://localhost:5000/api/offers",
+        {
+          clientId,
+          candidateId,
+          jobId,
+          offeredSalary,
+          preferredChargesType,
+          serviceType,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const newStatus = res.data.offer?.status || "Pending";
-      setStatus(newStatus);
-      onStatusChange?.(newStatus);
+      const newOffer = res.data.offer;
 
+      // Update parent offers map
+      onStatusChange?.(newOffer);
+
+      setStatus(newOffer.status || "Pending");
+      setCounterSalary(newOffer.candidateRequestedSalary || "");
       alert("Offer sent successfully!");
-    } catch (error) {
-      console.error(error.response?.data || error);
-      alert("Failed to send offer.");
+    } catch (err) {
+      console.error("Error sending offer:", err);
+      alert("Failed to send offer");
     } finally {
       setLoading(false);
     }
   };
 
-  // Respond to candidate's counter negotiation
+  // -------------------------
+  // Respond to negotiation (Counter / Accept / Reject)
+  // -------------------------
   const handleRespondNegotiation = async (decision) => {
-    if (!token) return;
-
     try {
+      setLoading(true);
+      const payload = { decision };
+
+      // Only send counterAmount if decision is "Counter"
+      if (decision === "Counter") {
+        payload.counterAmount = counterSalary;
+      }
+
       const res = await axios.post(
-        `/api/offers/${offerId}/respond-negotiation`,
-        { decision, counterAmount: decision === "Counter" ? counterAmount : null },
+        `http://localhost:5000/api/offers/${offerId}/respond-negotiation`,
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setStatus(res.data.status); // update button status
-      onStatusChange?.(res.data.status);
+      const updatedOffer = res.data;
 
-      alert(`Negotiation ${decision.toLowerCase()} successfully!`);
-      setShowNegotiationModal(false);
-      setCounterAmount(""); // reset counter input
+      setStatus(updatedOffer.status);
+      onStatusChange?.(updatedOffer);
+      setShowModal(false);
+      alert(`Negotiation ${decision.toLowerCase()} sent!`);
     } catch (err) {
-      console.error(err.response?.data || err);
-      alert("Failed to respond to negotiation.");
+      console.error("Error responding negotiation:", err);
+      alert("Failed to respond negotiation");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // -------------------------
+  // Render Button
+  // -------------------------
   return (
-    <div style={{ display: "inline-block" }}>
-      {/* Main Send Offer Button */}
-      <button
-        className={`btn btn-sm mb-1 ${
-          status === "Accepted"
-            ? "btn-success"
-            : status === "Rejected"
-            ? "btn-danger"
-            : status === "Pending"
-            ? "btn-warning"
-            : "btn-primary"
-        }`}
-        onClick={handleSendOffer}
-        disabled={disabled || loading || status === "Pending" || status === "Accepted"}
-      >
-        {loading ? "Sending..." : status || "Send Offer"}
-      </button>
+    <div>
+      {status === "Not Offered" && (
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={handleSendOffer}
+          disabled={loading}
+        >
+          {loading ? "Sending..." : "Send Offer"}
+        </button>
+      )}
 
-      {/* Show "Respond Negotiation" only if candidate has negotiated */}
+      {status === "Pending" && (
+        <span className="badge bg-info">Offer Sent  </span>
+      )}
+
+      {status === "Accepted" && (
+        <span className="badge bg-success">Accepted</span>
+      )}
+
+      {status === "Rejected" && (
+        <span className="badge bg-danger">Rejected</span>
+      )}
+
       {status === "Negotiating" && (
         <>
           <button
-            className="btn btn-sm btn-info ms-1"
-            onClick={() => setShowNegotiationModal(true)}
+            className="btn btn-warning btn-sm"
+            onClick={() => setShowModal(true)}
           >
-            Respond
+            Respond to Negotiation
           </button>
 
-          {/* Modal for Responding */}
-          {showNegotiationModal && (
+          {/* Negotiation Modal */}
+          {showModal && (
             <div
-              className="modal show d-block"
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+              className="modal show fade d-block"
+              tabIndex="-1"
+              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
             >
-              <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-dialog modal-md">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title">Respond to Negotiation</h5>
+                    <h5 className="modal-title">Respond to Candidate Negotiation</h5>
                     <button
+                      type="button"
                       className="btn-close"
-                      onClick={() => {
-                        setShowNegotiationModal(false);
-                        setCounterAmount("");
-                      }}
+                      onClick={() => setShowModal(false)}
                     ></button>
                   </div>
                   <div className="modal-body">
-                    {/* Show actual candidate requested salary */}
-                    <p>Candidate requested: Rs {candidateRequestedSalary || "N/A"}</p>
-
-                    {/* Input for client counter amount */}
-                    <input
-                      type="number"
-                      placeholder="Enter counter amount"
-                      className="form-control mb-2"
-                      value={counterAmount}
-                      onChange={(e) => setCounterAmount(e.target.value)}
-                    />
-
-                    <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-success"
-                        onClick={() => handleRespondNegotiation("Accepted")}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleRespondNegotiation("Rejected")}
-                      >
-                        Reject
-                      </button>
-                      <button
-                        className="btn btn-warning"
-                        onClick={() => handleRespondNegotiation("Counter")}
-                        disabled={!counterAmount || !canNegotiate}
-                      >
-                        Counter
-                      </button>
+                    <div className="mb-3">
+                      <label className="form-label">Your Counter Salary</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={counterSalary}
+                        onChange={(e) => setCounterSalary(e.target.value)}
+                      />
                     </div>
-
-                    {!canNegotiate && (
-                      <p className="text-danger mt-2">
-                        Maximum negotiations reached.
-                      </p>
-                    )}
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleRespondNegotiation("Rejected")}
+                      disabled={loading}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleRespondNegotiation("Accepted")}
+                      disabled={loading}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleRespondNegotiation("Counter")}
+                      disabled={loading}
+                    >
+                      Counter
+                    </button>
                   </div>
                 </div>
               </div>

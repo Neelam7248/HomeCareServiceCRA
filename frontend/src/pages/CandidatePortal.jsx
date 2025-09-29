@@ -3,43 +3,26 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getToken, removeToken } from "../utils/auth";
 import LogoutButton from "../components/LogoutButton";
-import SuggestedJobs from "../components/candidate/SuggestedClients";
+
 import OfferList from "../components/candidate/OfferList";
+import CandidateAcceptedOffers from "../components/candidate/CandidateAcceptedOffers";
+import CandidateClosedJobs from "../components/candidate/ClosedJobs";
+import Profile from "../components/candidate/Profile";
+
 
 const CandidatePortal = () => {
-  const [jobs, setJobs] = useState([]);
   const [activeTab, setActiveTab] = useState("suggestions");
-  const [selectedJob, setSelectedJob] = useState(null);
   const navigate = useNavigate();
 
   const candidateId = localStorage.getItem("userId");
   const token = getToken();
 
-  // ✅ Auth & fetch jobs
+  // ✅ Auth check
   useEffect(() => {
     if (!token || !candidateId) {
       navigate("/signin");
-      return;
     }
-
-    const fetchJobs = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/jobs", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setJobs(res.data);
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-        if (error.response?.status === 401) {
-          removeToken();
-          localStorage.clear();
-          navigate("/signin");
-        }
-      }
-    };
-
-    fetchJobs();
-  }, [candidateId, token, navigate]);
+  }, [token, candidateId, navigate]);
 
   return (
     <div className="container mt-4">
@@ -50,12 +33,24 @@ const CandidatePortal = () => {
 
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4">
+       
+        
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "suggestions" ? "active" : ""}`}
-            onClick={() => setActiveTab("suggestions")}
+            className={`nav-link ${activeTab === "closed" ? "active" : ""}`}
+            onClick={() => setActiveTab("closed")}
           >
-            Suggestions
+            Closed Jobs
+          </button>
+        </li>
+        
+        
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "HiringHistory" ? "active" : ""}`}
+            onClick={() => setActiveTab("HiringHistory")}
+          >
+            hiring history
           </button>
         </li>
         <li className="nav-item">
@@ -77,48 +72,15 @@ const CandidatePortal = () => {
       </ul>
 
       {/* Tab Content */}
-      {activeTab === "suggestions" && (
+      
+
+      {activeTab === "closed" && (
         <div>
-          <h3>Suggested Jobs</h3>
-          {jobs.length === 0 ? (
-            <p>No jobs available at the moment.</p>
-          ) : (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-light">
-                <tr>
-                  <th>Title</th>
-                  <th>Location</th>
-                  <th>Category</th>
-                  <th>Salary</th>
-                  <th>Posted By</th>
-                  <th>Posted On</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr key={job._id}>
-                    <td>{job.title}</td>
-                    <td>{job.location}</td>
-                    <td>{job.category}</td>
-                    <td>{job.salary}</td>
-                    <td>{job.clientName}</td>
-                    <td>{new Date(job.createdAt).toLocaleString()}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => setSelectedJob(job)}
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <CandidateClosedJobs token={token} candidateId={candidateId} />
         </div>
       )}
+
+
 
       {activeTab === "offers" && (
         <div>
@@ -126,12 +88,17 @@ const CandidatePortal = () => {
           <OfferList candidateId={candidateId} token={token} />
         </div>
       )}
+      {activeTab === "HiringHistory" && (
+        <div>
+          <h3>Candidate Accepted Offers</h3>
+          <CandidateAcceptedOffers candidateId={candidateId}  />
+        </div>
+      )}
 
       {activeTab === "account" && (
         <div>
-          <h3>Update Your Account</h3>
-          <p>Form for updating candidate profile, skills, and preferences.</p>
-          {/* Add your account update form here */}
+          <h1>Your Profile</h1>
+         <Profile candidateId={candidateId}/>
         </div>
       )}
     </div>

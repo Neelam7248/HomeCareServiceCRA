@@ -13,6 +13,8 @@ const clientSchema = new mongoose.Schema({
   maxBudget: Number,          // budget in Rs
   preferredAge: Number,
   preferredGender: String,
+  isDeleted: { type: Boolean, default: false }
+,
     // ✅ Admin approval system
   approved: { type: Boolean, default: false } 
 }, { timestamps: true });

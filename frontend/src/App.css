@@ -39,3 +39,9 @@
 .modal-content.custom-bg {
   background-color: powderpink !important;
 }
+.header {
+  display: flex;           /* logo aur text ko ek line me dikhaye */
+  align-items: center;     /* vertically center kare */
+  gap: 10px;               /* logo aur title ke beech gap */
+  padding: 10px 20px;      /* thoda space around */
+}

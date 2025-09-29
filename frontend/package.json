@@ -2,8 +2,7 @@
   "name": "myfreact_app",
   "version": "0.1.0",
   "private": true,
-  "proxy":"http://localhost:5000",
-
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -12,9 +11,12 @@
     "axios": "^1.11.0",
     "bootstrap": "^5.3.8",
     "react": "^19.1.0",
+    "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
-    "react-scripts": "^0.0.0",
+    "react-scripts": "^5.0.1",
+    "react-slick": "^0.31.0",
+    "slick-carousel": "^1.8.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -42,6 +44,9 @@
     ]
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.11"
+    "@tailwindcss/postcss": "^4.1.11",
+    "css-loader": "^7.1.2",
+    "postcss-loader": "^8.2.0",
+    "style-loader": "^4.0.0"
   }
 }

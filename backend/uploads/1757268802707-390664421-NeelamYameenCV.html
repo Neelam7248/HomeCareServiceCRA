@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neelam Yameen – CV</title>
+  <style>
+    /* ====== Base / Theme ====== */
+    :root {
+  --bg: #ffffff;     /* Bright white background */
+  --ink: #000000;    /* Pure black text */
+  --muted: #475569;  /* Muted gray text for sub-headings */
+  --accent: #2563eb; /* Blue accent (links, highlights) */
+  --chip: #f3f4f6;   /* Off-white for skill chips */
+  --rule: #e2e8f0;   /* Light gray border lines */
+}
+
+
+    
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      font: 500 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--ink);
+      background:var(--bg);
+      -webkit-print-color-adjust: exact; /* for Safari */
+      print-color-adjust: exact;
+    }
+
+    /* ====== Layout ====== */
+    .page{
+      max-width: 940px; /* nice reading width */
+      margin: 32px auto;
+      padding: 32px;
+      background: var(--bg);
+    }
+    header{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      border-bottom: 2px solid var(--rule);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    h1{
+      font-size: 32px;
+      line-height: 1.2;
+      margin:0 0 4px 0;
+      letter-spacing: .2px;
+    }
+    .role{color:var(--muted); font-weight:600}
+    .contact{
+      text-align:right;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .contact a{color:inherit; text-decoration:none}
+
+    .section{margin: 22px 0}
+    .section h2{
+      font-size: 16px;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px 0;
+    }
+
+    /* ====== Flexible two-column for desktop, single for mobile ====== */
+    .cols{
+      display: grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap: 28px;
+    }
+    @media (max-width: 820px){
+      .cols{ grid-template-columns: 1fr; }
+      header{ grid-template-columns: 1fr; text-align:left }
+      .contact{ text-align:left }
+    }
+
+    /* ====== Lists & items ====== */
+    .item{ margin-bottom: 14px; }
+    .item:last-child{ margin-bottom: 0; }
+
+    .titleRow{
+      display:flex; align-items:baseline; gap:8px; flex-wrap:wrap
+    }
+    .title{ font-weight:700 }
+    .org{ color: var(--accent); font-weight:600 }
+    .meta{ margin-left:auto; color:var(--muted); font-size: 13px }
+
+    .bullets{ margin: 6px 0 0 18px; padding:0 }
+    .bullets li{ margin: 4px 0 }
+
+    .chipRow{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+      font-size: 13px; padding:4px 8px; border-radius: 999px; background: var(--chip);
+      border: 1px solid var(--rule);
+    }
+
+    /* ====== Footer actions ====== */
+    .actions{
+      display:flex; gap:10px; justify-content:flex-end; margin-top: 18px; border-top: 1px dashed var(--rule); padding-top: 10px;
+    }
+    .btn{
+      border:1px solid var(--rule); background:transparent; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600
+    }
+    .btn:hover{ filter:brightness(0.95) }
+
+    /* ====== Print styles (A4 one-page) ====== */
+    @page{ size: A4; margin: 14mm }
+    @media print{
+      .page{ box-shadow:none; margin:0; padding:0 }
+      .actions{ display:none }
+      a{ color: inherit; text-decoration: none }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page" role="document">
+
+    <!-- ===== Header ===== -->
+    <header>
+      <div>
+        <h1>Neelam Yameen</h1>
+
+        <div class="role">Junior Full Stack Web Developer</div>
+      </div>
+      <div class="contact">
+    
+        <div><a href="mailto:kausarneelam@gmail.com">kausarneelam@gmail.com</a></div>
+        <div>Mobile : 0314-1431364 ,03174099648</div>
+        <div>Lahore, Pakistan · <a href="https://github.com/Neelam7248">github.com/Neelam7248</a> · <a href="https://www.linkedin.com/in/kausarneelam@gmail.com/">LinkedIn</a></div>
+      </div>
+    </header>
+<!-- ===== Summary ===== -->
+    <section class="section">
+      <h2>Personnel Info</h2>
+   <p>Date of Birth:9Feb 1993</p>
+   <p>Religion: Islam</p>
+   <P>Language:
+    Urdu: Native
+    English: Professional Working Proficiency</P>
+<address> House no 108 sector D 2 Nill Block 3 Green Town Lahore</address>
+</section>
+    <!-- ===== Summary ===== -->
+    <section class="section">
+      <h2>Summary</h2>
+   <p>Enthusiastic Junior React Developer with a passion for building responsive and user-friendly web applications. Strong foundation in JavaScript, React.js, and modern web technologies. Quick learner eager to contribute to team success through hard work and continuous learning
+
+</p></section>
+
+    <div class="cols">
+      <!-- ===== Left column (Experience / Projects / Education) ===== -->
+      <div>
+        <section class="section">
+          <h2>Experience</h2>
+
+          <div class="item">
+            <div class="titleRow">
+              <div class="title">Front‑End Developer</div>
+              <div class="org">RL Tech</div>
+              <div class="meta">Jan 2023 · Lahore</div>
+            </div>
+            <ul class="bullets">
+              <li>Developed and maintained code for in-house and client websites utilizing HTML, CSS, JavaScript, and React.js</li>
+              <li>Implemented responsive design principles to ensure websites render well across multiple devices</li>
+              <li>Collaborated with senior developers to identify and fix bugs in existing projects
+Assisted in the development of a customer portal that improved user engagement by 15%
+</li>
+            </ul>
+          </div>
+
+          <div class="item">
+            <div class="titleRow">
+              <div class="title">Junior Web Developer</div>
+              <div class="org">Community Non-Profit Organization</div>
+              <div class="meta">Aug 2023 – Dec 2024 · Remote</div>
+            </div>
+            <ul class="bullets">
+              <li>Create customer dashboard with charts and filters using React + Express.</li>
+              <li>Wrote REST APIs and integrated MongoDB for CRUD operations.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Projects</h2>
+
+          <div class="item" text-align="justify">
+            <div class="titleRow">
+              <div class="title">Client Portal</div>
+              <div class="org">React · Node · MongoDB</div><br>
+              <div class="meta"><a href="https://github.com/Neelam7248/Ecommerce">Code</a></div><br>
+
+        <div class="titleRow"><div class="title">Home Care Services System</div> 
+      <div class="org">React · Node · MongoDB</div><br>
+    <div class="meta"><a href="https://github.com/Neelam7248/HomeCareServiceCRA">Code</a></div>
+<div class="titleRow"><div class="title">Virtual Library</div>
+<div class="org">EJS. Node· MongoDB</div><br>
+<div class="meta"> <a href="https://github.com/Neelam7248/library">Code</a></div>
+   <div class="titleRow"><div class="title">Task Manager</div>
+   <div class="org">React. Node· MongoDB</div><br/>
+  <div class="meta"><a href="https://github.com/Neelam7248/IR QuailForm">Code</a></div>
+        
+              
+              
+            <ul class="bullets">
+              <li>End‑to‑end portal to post jobs, manage applicants, and track status.</li>
+              <li>Implemented filters, sorting, and role‑based access control.</li>
+            </ul>
+          </div>
+
+          <div class="item">
+            <div class="titleRow">
+             
+            <ul class="bullets">
+              <li>Built authentication UI and protected routes; created reusable form components.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Education</h2>
+          <div class="item">
+            <div class="titleRow">
+              <div class="title">Masters in Information Technology</div>
+              <div class="org">Virtual University </div>
+              <div class="meta">Completing Year 2022</div>
+            </div>
+            <ul class="bullets">
+              <li>Relevant coursework: Data Structures, Web Development, Databases.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== Right column (Skills / Tools / Certificates / Extra) ===== -->
+      <aside>
+        <section class="section">
+          <h2>Skills</h2>
+          <div class="chipRow">
+            <span class="chip">HTML5</span>
+            <span class="chip">CSS3</span>
+            <span class="chip">JavaScript (ES6+)</span>
+            <span class="chip">React</span>
+            <span class="chip">Node.js</span>
+            <span class="chip">Express</span>
+            <span class="chip">MongoDB</span>
+            <span class="chip">Git & GitHub</span>
+            <span class="chip">REST APIs</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Tools</h2>
+          <div class="chipRow">
+            <span class="chip">VS Code</span>
+            <span class="chip">Postman</span>
+            <span class="chip">Hekroku</span>
+            <span class="chip">Vercel</span>
+            <span class="chip">Netlify</span>
+          </div>
+        </section>
+
+        
+        <section class="section">
+          <h2>Languages</h2>
+          <div class="chipRow">
+            <span class="chip">English</span>
+            <span class="chip">Urdu</span>
+            <span class="chip">Punjabi</span>
+          </div>
+        </section>
+
+      </aside>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+      <button class="btn" onclick="toggleDensity()" title="Toggle compact spacing">Toggle Compact</button>
+    </div>
+  </div>
+
+  <script>
+    // Optional: switch between normal and compact spacing for fitting more content on one page
+    let compact = false;
+    function toggleDensity(){
+      compact = !compact;
+      document.body.style.setProperty('--space', compact ? '10px' : '14px');
+      document.querySelectorAll('.section').forEach(s => s.style.margin = compact ? '16px 0' : '22px 0');
+      document.querySelectorAll('.item').forEach(i => i.style.marginBottom = compact ? '10px' : '14px');
+    }
+  </script>
+</body>
+</html>

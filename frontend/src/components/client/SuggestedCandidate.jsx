@@ -15,6 +15,21 @@ const SuggestedCandidate = ({ userId, jobId }) => {
   const [showNegotiation, setShowNegotiation] = useState(false); // Show/hide modal
   const [client, setClient] = useState(null); // Logged-in client
   const token = getToken();
+const headers = [
+  "Job Title",
+  "Name",
+  "Email",
+  "Phone",
+  "Experience",
+  "Charges",
+  "Charges Type",
+  "Negotiated Charges",
+  "ClConChar",
+  "Final Salary",
+  "Gender",
+  "Status",
+  "Action"
+];
 
   // -------------------------
   // Fetch suggested candidates every 5 seconds
@@ -60,13 +75,13 @@ const SuggestedCandidate = ({ userId, jobId }) => {
     const fetchOffers = async () => {
       if (!client) return; // Wait for client data
       try {
-        const res = await axios.get("/api/offers/client/offers", {
+        const res = await axios.get("/api/offers/offers/client", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const offerMap = {};
         res.data.forEach((offer) => {
-          offerMap[offer.candidateId._id] = offer;
+          offerMap[offer.candidate._id] = offer;
         });
 
         setOffers(offerMap);
@@ -102,84 +117,72 @@ const SuggestedCandidate = ({ userId, jobId }) => {
   // Render component
   // -------------------------
   return (
-    <div className="container mt-4">
-      <h2>Suggested Candidates</h2>
+    <div className="container mt-4 vh-100" >
+      <h4>Suggested Candidates to you {client?.email}</h4>
+      
       {suggestions.length > 0 ? (
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>Job Title</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Experience</th>
-              <th>Charges</th>
-              <th>Charges Type</th>
-              <th>Negotiated Charges</th>
-              <th>Gender</th>
-              <th>Status</th>
-              <th>Action</th>
-              <th>Negotiation</th>
-            </tr>
+        <table className="table table-striped" >
+          <thead >{/*th ko manually ni likha balk pehle const k zarye uper
+           declare kerdia phir neeche .map use kis jsx men*/}
+            <tr >{headers.map((h) => (
+        <th key={h} style={{ backgroundColor: '#9cbcdfff' }}>{h}</th>
+      ))}
+              
+             </tr>
           </thead>
           <tbody>
-            {suggestions.map(cand => (
+            {suggestions.map(cand => 
+              
+                      (
               <tr key={cand._id}>
-                <td>{cand.skills || "N/A"}</td>
-                <td>{cand.name}</td>
-                <td>{cand.email}</td>
-                <td>{cand.phone}</td>
-                <td>{cand.experience}</td>
-                <td>{cand.charges}</td>
-                <td>{cand.chargesType}</td>
-                {/* Display negotiated salary if available, else "-" */}
-                <td>{offers[cand._id]?.negotiatedSalary || "-"}</td>
-                <td>{cand.gender}</td>
-                <td>{cand.status || "Not Offered"}</td>
-
-                {/* -------------------------
-                     Send Offer Button (for client)
-                     ------------------------- */}
-                <td>
-                  {client ? (
-                    <SendOfferButton
-                      candidateId={cand._id}
-                      jobId={cand.skills}
-                      offerId={offers[cand._id]?._id}  // Add offerId here
+  <td>{cand.skills || "N/A"}</td>
+  <td>{cand.name}</td>
+  <td>{cand.email}</td>
+  <td>{cand.phone}</td>
+  <td>{cand.experience}</td>
   
-                      maxBudget={client.maxBudget}
-                      preferredChargesType={client.preferredChargesType}
-                      negotiationCount={cand.negotiationCount || 0}
-                      serviceType={client.serviceType}
-                      disabled={cand.status === "Pending" || cand.status === "Accepted"}
-                      currentStatus={cand.status}
-                      onStatusChange={(newStatus) => {
+  {/* First offer sent by client */}
+  <td>Rs{cand.charges || "-"}</td>
+  <td>{cand.chargesType}</td>
+  {/* Candidate requested salary */}
+<td>Rs {offers[cand._id]?.candidateRequestedSalary || "-"}</td>
+  {/* Client counter offer */}
+  <td>Rs {offers[cand._id]?.clientCounterSalary || "-"}</td>
+  
+  {/* Final agreed salary */}
+  <td>Rs {offers[cand._id]?.finalSalary || "-"}</td>
+  
+  <td>{cand.gender}</td>
+  <td>{offers[cand._id]?.status || "Not Offered"}</td>
+
+  <td>
+    {client && (
+      <SendOfferButton
+        clientId={client._id}
+        candidateId={cand._id}
+          clientEmail={client.email}
+        candidateEmail={cand.email}
+        jobId={cand.skills}
+        offerId={offers[cand._id]?._id}
+        offeredSalary={cand.charges}
+        preferredChargesType={client.preferredChargesType}
+        serviceType={client.serviceType}
+        negotiationCount={offers[cand._id]?.negotiationCount || 0}
+        currentStatus={cand.status}
+        candidateRequestedSalary={offers[cand._id]?.candidateRequestedSalary || ""}
+        clientCounterSalary={offers[cand._id]?.clientCounterSalary || ""}
+        finalSalary={offers[cand._id]?.finalSalary || ""}
+        //offers={offers} // pass entire offers map for sync  
+        onStatusChange={(newStatus) => {
                         setSuggestions(prev =>
                           prev.map(c => c._id === cand._id ? { ...c, status: newStatus } : c)
                         );
                       }}
-                    />
-                  ) : (
-                    <p>Loading...</p>
-                  )}
-                </td>
-
-                {/* -------------------------
-                     Open negotiation modal
-                     ------------------------- */}
-                <td>
-                  <button
-                    className="btn btn-sm btn-warning"
-                    onClick={() => {
-                      setSelectedCandidate(cand);
-                      setShowNegotiation(true);
-                    }}
-                  >
-                    Negotiate
-                  </button>
-                </td>
-              </tr>
-            ))}
+      />
+    )}
+  </td>
+</tr>
+ ))}
           </tbody>
         </table>
       ) : (
@@ -189,41 +192,11 @@ const SuggestedCandidate = ({ userId, jobId }) => {
       {/* -------------------------
            Negotiation Modal
            ------------------------- */}
-      {showNegotiation && selectedCandidate && (
-        <div className="modal show fade d-block" tabIndex="-1" style={{ backgroundColor: "powderblue" }}>
-          <div className="modal-dialog modal-lg" style={{ backgroundColor: "blue" }}>
-            <div className="modal-content custom-bg" style={{ backgroundColor: "lavender" }}>
-              <div className="modal-header">
-                <h5 className="modal-title" style={{ backgroundColor: "peachpuff" }}>
-                  Negotiation with {selectedCandidate.name}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowNegotiation(false)}
-                  style={{ backgroundColor: "peachpuff" }}
-                ></button>
-              </div>
-              <div className="modal-body" style={{ backgroundColor: "peachpuff" }}>
-                <SalaryNegotiationForm
-                  candidateId={selectedCandidate._id}
-                  clientId={localStorage.getItem("userId")}
-                  jobId={jobId}
-                />
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowNegotiation(false)}
-                  style={{ backgroundColor: "lightblue" }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              
+            
+          
+        
+      
     </div>
   );
 };

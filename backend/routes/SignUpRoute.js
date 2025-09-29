@@ -89,7 +89,7 @@ await newUser.save();
     const token = jwt.sign(
       { id: newUser._id, userType: data.userType },
       JWT_SECRET,
-      { expiresIn: "8h" }
+      { expiresIn: "1h" }
     );
 
     res.status(201).json({
@@ -114,39 +114,49 @@ await newUser.save();
 ============================= */
 router.post("/signin", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, userType } = req.body;
 
-    // User check
-   let user = await Candidate.findOne({ email });
-let userType = "candidate";
+    if (!userType) {
+      return res.status(400).json({ message: "User type is required" });
+    }
 
-if (!user) {
-  user = await Client.findOne({ email });
-  userType = "client";
-}
+    let user;
 
-if (!user) return res.status(400).json({ message: "Invalid credentials" });
-if (!user.approved) {
+    if (userType === "candidate") {
+      user = await Candidate.findOne({ email });
+    } else if (userType === "client") {
+      user = await Client.findOne({ email });
+    } else {
+      return res.status(400).json({ message: "Invalid user type" });
+    }
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+if (user.isDeleted) {
+      return res.status(403).json({ message: "Inactive user. Please contact support." });
+    }
+    if (!user.approved) {
       return res.status(403).json({ message: "Your account is pending admin approval." });
     }
-// Password check
-const isMatch = await bcrypt.compare(password, user.password);
-if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-// JWT token
-const token = jwt.sign({ id: user._id, userType }, JWT_SECRET, { expiresIn: "8h" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-res.json({
-  message: "Login successful",
-  token,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    userType:userType
-  }
-});
+    const token = jwt.sign({ id: user._id, userType }, JWT_SECRET, { expiresIn: "1h" });
 
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        userType
+      }
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });

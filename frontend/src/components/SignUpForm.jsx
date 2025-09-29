@@ -1,98 +1,66 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {setToken} from "../utils/auth"
+import { setToken } from "../utils/auth";
+
 const SignUp = () => {
   const navigate = useNavigate();
   const daysOfWeek = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const [serverMessage, setServerMessage] = useState("");
+const [messageType, setMessageType] = useState("success"); // success | danger | warning
 
   const [resumeFile, setResumeFile] = useState(null);
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    phone: "",
-    address: "",
-    occupation: "",
-userType:"",
-    // Candidate fields
-    age: "",
-    dob: "",  // keep only DOB
-    gender: "",
-    skills: "",
-    availability: {
-  days: [],      // array of selected days
-  hours: ""      // e.g., "9am-5pm"
-}
-,chargesType:"",
-    charges: "",
-    experience: "",
-
-    // Client requirement fields
-    serviceType: "",
-    requiredExperience: "",
-    preferredAge: "",
-    preferredGender: "",
-     preferredChargesType:"", // hourly/daily/weekly
-  maxBudget:"",
-  requiredAvailability :""
+    name: "", email: "", password: "", phone: "", address: "", occupation: "",
+    userType:"", age: "", dob: "", gender: "", skills: "",
+    availability: { days: [], hours: "" },
+    chargesType:"", charges: "", experience: "",
+    serviceType: "", requiredExperience: "", preferredAge: "", preferredGender: "",
+    preferredChargesType:"", maxBudget:"", requiredAvailability :""
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  //handle user tp
-  
-// Function to calculate age from DOB
-const calculateAge = (dob) => {
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-};
-// Form submission handler
+  const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const formDataToSend = new FormData();
     formDataToSend.append("userType", formData.userType);
 
-    // Common fields
     ["name","email","password","phone","address","occupation"].forEach((field) => {
       formDataToSend.append(field, formData[field] || "");
     });
 
     if (formData.userType === "candidate") {
-  ["age","dob","gender","skills","experience","chargesType","charges"].forEach((field) => {
-    formDataToSend.append(field, formData[field] || "");
-  });
+      ["age","dob","gender","skills","experience","chargesType","charges"].forEach((field) => {
+        formDataToSend.append(field, formData[field] || "");
+      });
 
-  // Handle availability separately
-  formDataToSend.append(
-    "availability",
-    JSON.stringify(formData.availability || { days: [], hours: "" })
-  );
+      formDataToSend.append(
+        "availability",
+        JSON.stringify(formData.availability || { days: [], hours: "" })
+      );
 
-  // Append resume file if exists
-  if (resumeFile) formDataToSend.append("resume", resumeFile);
-}
-
-     
-    
+      if (resumeFile) formDataToSend.append("resume", resumeFile);
+    }
 
     if (formData.userType === "client") {
       ["serviceType","requiredExperience","preferredChargesType",
-  "maxBudget","preferredAge","preferredGender","requiredAvailability" ].forEach((field) => {
+      "maxBudget","preferredAge","preferredGender","requiredAvailability" ].forEach((field) => {
         formDataToSend.append(field, formData[field] || "");
       });
     }
@@ -108,13 +76,31 @@ const calculateAge = (dob) => {
         alert(result.message || "Signup failed");
         return;
       }
+if (!response.ok) {
+  setServerMessage(result.message || "Signup failed");
+  setMessageType("danger");
+  return;
+}
+
+if (result.requiresApproval) {
+  setServerMessage("Signup successful. Your account is pending admin approval.");
+  setMessageType("warning");
+  navigate("/");
+  return;
+}
+
+setServerMessage(result.message || "Signup successful!");
+setMessageType("success");
+setToken(result.token);
+navigate("/");
 
       alert(result.message);
-setToken(result.token)
+      setToken(result.token);
+
       if (formData.userType === "client") {
-        navigate("/clientPortal");
+        navigate("/");
       } else if (formData.userType === "candidate") {
-        navigate("/candidatePortal");
+        navigate("/");
       }
 
     } catch (error) {
@@ -124,405 +110,308 @@ setToken(result.token)
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <form onSubmit={handleSubmit}>
-  <div className="mb-3">
-    <label className="form-label">Name</label>
-    <input
-      type="text"
-      className="form-control"
-      name="name"
-      value={formData.name}
-      onChange={handleChange}
-      required
-    />
-  </div>
+    <div className="container mt-5">
+      <div className="row justify-content-center">
+        <div className="col-md-8">
+          <div className="card shadow">
+            <div className="card-header bg-primary text-white text-center">
+              <h4>Sign Up</h4>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit} className="row g-3">
 
-  <div className="mb-3">
-    <label className="form-label">Email</label>
-    <input
-      type="email"
-      className="form-control"
-      name="email"
-      value={formData.email}
-      onChange={handleChange}
-      required
-    />
-  </div>
-  <div className="mb-3">
-  <label className="form-label">Password</label>
-  <input
-    type="password"
-    className="form-control"
-    name="password"
-    placeholder="Enter your password"
-    value={formData.password}
-    onChange={handleChange}
-    required
-  />
-</div>
-<div className="mb-3">
-  <label className="form-label">Phone</label>
-  <input
-    type="text"
-    className="form-control"
-    name="phone"
-    placeholder="Enter your phone number"
-    value={formData.phone}
-    onChange={handleChange}
-    required
-  />
-</div>
+                {/* Name */}
+                <div className="col-md-6">
+                  <label className="form-label">Name</label>
+                  <input type="text" className="form-control"
+                    name="name" value={formData.name} onChange={handleChange} required />
+                </div>
 
-<div className="mb-3">
-  <label className="form-label">Address</label>
-  <input
-    type="text"
-    className="form-control"
-    name="address"
-    placeholder="Enter your address"
-    value={formData.address}
-    onChange={handleChange}
-    required
-  />
-</div>
+                {/* Email */}
+                <div className="col-md-6">
+                  <label className="form-label">Email</label>
+                  <input type="email" className="form-control"
+                    name="email" value={formData.email} onChange={handleChange} required />
+                </div>
 
+                {/* Password */}
+                <div className="col-md-6">
+                  <label className="form-label">Password</label>
+                  <input type="password" className="form-control"
+                    name="password" value={formData.password} onChange={handleChange} required />
+                </div>
 
-  {/* ✅ UserType Selection */}
-  <div className="mb-3">
-    <label className="form-label">Select User Type</label>
-    <select
-      className="form-select"
-      name="userType"
-      value={formData.userType}
-      onChange={handleChange}
-      required
-    >
-      <option value="">-- Select User Type --</option>
-      <option value="client">Client</option>
-      <option value="candidate">Candidate</option>
-    </select>
-  </div>
+                {/* Phone */}
+                <div className="col-md-6">
+                  <label className="form-label">Phone</label>
+                  <input type="text" className="form-control"
+                    name="phone" value={formData.phone} onChange={handleChange} required />
+                </div>
 
-  {/* ✅ Candidate extra fields */}
-  {formData.userType === "candidate" && (
-    <>
-    <section>
-      <h2>Basic Information</h2>
-   <div className="mb-3">
-  <label className="form-label">Upload Resume</label>
-  <input
-    type="file"
-    className="form-control"
-    onChange={(e) => setResumeFile(e.target.files[0])}
-  />
-</div>
-<div className="mb-3">
-  <label className="form-label">Date of Birth (YYYY-MM-DD)</label>
-  <input
-    type="text"
-    name="dob"
-    className="form-control"
-    placeholder="YYYY-MM-DD"
-    value={formData.dob || ""}
-    onChange={(e) => {
-      const dob = e.target.value;
-      const age = calculateAge(dob);
-      setFormData(prev => ({ ...prev, dob, age }));
-    }}
-    required
-  />
-  <p>Calculated Age: {formData.age}</p>
-</div>
+                {/* Address */}
+                <div className="col-md-12">
+                  <label className="form-label">Address</label>
+                  <input type="text" className="form-control"
+                    name="address" value={formData.address} onChange={handleChange} required />
+                </div>
 
-<div className="mb-3">
-      <label className="form-label">Gender:</label>
-      <select
-        className="form-select"
-        name="gender"
-        value={formData.gender}
-        onChange={handleChange}
-        required
-      >
+                {/* User Type */}
+                <div className="col-md-6">
+                  <label className="form-label">User Type</label>
+                  <select className="form-select"
+                    name="userType" value={formData.userType} onChange={handleChange} required>
+                    <option value="">-- Select User Type --</option>
+                    <option value="client">Client</option>
+                    <option value="candidate">Candidate</option>
+                  </select>
+                </div>
+
+                {/* ✅ Candidate Extra Fields */}
+                {/* ✅ Candidate Extra Fields */}
+{formData.userType === "candidate" && (
+  <>
+    {/* Resume */}
+    <div className="col-md-6">
+      <label className="form-label">Upload Resume</label>
+      <input type="file" className="form-control"
+        onChange={(e) => setResumeFile(e.target.files[0])} />
+    </div>
+
+    {/* DOB */}
+    <div className="col-md-6">
+      <label className="form-label">Date of Birth</label>
+      <input type="text" className="form-control"
+        name="dob" placeholder="YYYY-MM-DD"
+        value={formData.dob || ""}
+        onChange={(e) => {
+          const dob = e.target.value;
+          const age = calculateAge(dob);
+          setFormData(prev => ({ ...prev, dob, age }));
+        }} required />
+      <small className="text-muted">Age: {formData.age}</small>
+    </div>
+
+    {/* Gender */}
+    <div className="col-md-6">
+      <label className="form-label">Gender</label>
+      <select className="form-select"
+        name="gender" value={formData.gender} onChange={handleChange} required>
         <option value="">-- Select Gender --</option>
         <option value="male">Male</option>
         <option value="female">Female</option>
         <option value="other">Other</option>
       </select>
+    </div>
 
-    </div>  
+    {/* ✅ Availability Days */}
+    <div className="col-md-6">
+      <label className="form-label">Available Days</label>
+      <select className="form-select"
+        onChange={(e) => {
+          const selectedDay = e.target.value;
+          if (!selectedDay) return;
+          setFormData(prev => {
+            const currentDays = prev.availability?.days || [];
+            return {
+              ...prev,
+              availability: {
+                ...prev.availability,
+                days: [...currentDays, selectedDay]
+              }
+            };
+          });
+          e.target.value = ""; // reset select
+        }}
+      >
+        <option value="">-- Select a Day --</option>
+        {daysOfWeek
+          .filter(day => !(formData.availability?.days || []).includes(day))
+          .map(day => (
+            <option key={day} value={day}>{day}</option>
+        ))}
+      </select>
 
-      
-    </section>
-<section>
-      <h2> Information About Availability and skills</h2>
-    
+      {/* Display selected days */}
+      <div className="mt-2">
+        {formData.availability?.days?.map((day, index) => (
+          <span key={index}
+            className="badge bg-primary me-1"
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setFormData(prev => ({
+                ...prev,
+                availability: {
+                  ...prev.availability,
+                  days: prev.availability.days.filter(d => d !== day)
+                }
+              }));
+            }}
+          >
+            {day} &times;
+          </span>
+        ))}
+      </div>
+    </div>
 
-<div className="mb-3">
-  <label className="form-label">Available Days:</label>
-  <select
-    className="form-select"
-    onChange={(e) => {
-      const selectedDay = e.target.value;
-      if (!selectedDay) return;
-
-      setFormData(prev => {
-        const currentDays = prev.availability?.days || [];
-        return {
-          ...prev,
-          availability: {
-            ...prev.availability,
-            days: [...currentDays, selectedDay]
-          }
-        };
-      });
-      e.target.value = ""; // reset select
-    }}
-  >
-    <option value="">-- Select a Day --</option>
-    {daysOfWeek
-      .filter(day => !(formData.availability?.days || []).includes(day))
-      .map(day => (
-        <option key={day} value={day}>{day}</option>
-    ))}
-  </select>
-
-  {/* Display selected days */}
-  <div className="mt-2">
-    {formData.availability?.days?.map((day, index) => (
-      <span
-        key={index}
-        className="badge bg-primary me-1"
-        style={{cursor:"pointer"}}
-        onClick={() => {
-          // remove day on click
+    {/* ✅ Availability Hours */}
+    <div className="col-md-6">
+      <label className="form-label">Available Hours</label>
+      <input type="text" className="form-control"
+        placeholder="e.g., 9am-5pm"
+        value={formData.availability.hours}
+        onChange={(e) =>
           setFormData(prev => ({
             ...prev,
             availability: {
               ...prev.availability,
-              days: prev.availability.days.filter(d => d !== day)
+              hours: e.target.value
             }
-          }));
-        }}
-      >
-        {day} &times;
-      </span>
-    ))}
-  </div>
-</div>
-<div className="mb-3">
-  <label className="form-label">Available Hours:</label>
-  <input
-    type="text"
-    className="form-control"
-    placeholder="e.g., 9am-5pm"
-    value={formData.availability.hours}
-    onChange={(e) =>
-      setFormData(prev => ({
-        ...prev,
-        availability: {
-          ...prev.availability,
-          hours: e.target.value
+          }))
         }
-      }))
-    }
-  />
-</div>
-<section>
-  <h2>Work Details</h2>
+      />
+    </div>
 
-  {/* Charges selection */}
-  <div className="mb-3">
-    <label className="form-label">Charges:</label>
-    <select
-      className="form-select"
-      name="chargesType"
-      value={formData.chargesType}
-      onChange={handleChange}
-      required
-    >
-      <option value="">-- Select Charges --</option>
-      <option value="hourly">Hourly</option>
-      <option value="daily">Daily</option>
-      <option value="weekly">Weekly</option>
-    </select>
-  </div>
-<div className="mb-3">
-  <label className="form-label">Charges (in Rupees)</label>
-  <input
-    type="number"
-    name="charges"
-    className="form-control"
-    placeholder="Enter charges in Rs"
-    value={formData.charges || ""}
-    onChange={handleChange}
-    min="0"
-  />
-</div>
-<div className="mb-3">
-  <label className="form-label"> Experience</label>
-  <select className="form-select"
-   name="experience"
-   onChange={handleChange}
-    value={formData.experience} required >
-    <option value="">Select Experience</option>
-    <option value="0-1">0–1 Year</option>
-    <option value="1-3">1–3 Years</option>
-    <option value="3-5">3–5 Years</option>
-    <option value="5+">5+ Years</option>
-  </select>
-</div>
+    {/* Charges Type */}
+    <div className="col-md-6">
+      <label className="form-label">Charges Type</label>
+      <select className="form-select"
+        name="chargesType" value={formData.chargesType} onChange={handleChange} required>
+        <option value="">-- Select Charges --</option>
+        <option value="hourly">Hourly</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+      </select>
+    </div>
 
+    {/* Charges */}
+    <div className="col-md-6">
+      <label className="form-label">Charges (Rs)</label>
+      <input type="number" className="form-control"
+        name="charges" placeholder="Enter charges in Rs"
+        value={formData.charges || ""} onChange={handleChange} min="0" />
+    </div>
 
-</section>
+    {/* Experience */}
+    <div className="col-md-6">
+      <label className="form-label">Experience</label>
+      <select className="form-select"
+        name="experience" value={formData.experience} onChange={handleChange} required>
+        <option value="">Select Experience</option>
+        <option value="0-1">0–1 Year</option>
+        <option value="1-3">1–3 Years</option>
+        <option value="3-5">3–5 Years</option>
+        <option value="5+">5+ Years</option>
+      </select>
+    </div>
 
+    {/* Skills */}
+    <div className="col-md-6">
+      <label className="form-label">Skills</label>
+      <select className="form-select"
+        name="skills" value={formData.skills} onChange={handleChange} required>
+        <option value="">-- Select Skill --</option>
+        <option value="baby sitter">Baby Sitter</option>
+        <option value="cook">Cook</option>
+        <option value="maid">Maid</option>
+      </select>
+    </div>
+  </>
+)}
 
-<div className="mb-3">
-  <label className="form-label">Skills:</label>
-  <select
-    className="form-select"
-    name="skills"          // using 'category' from your formData
-    value={formData.skills}
-    onChange={handleChange}
-    required
-  >
-    <option value="">-- Select Skill --</option>
-    <option value="baby sitter">Baby Sitter</option>
-    <option value="cook">Cook</option>
-    <option value="maid">Maid</option>
-  </select>
-</div>
+                {/* ✅ Client Extra Fields */}
+               {formData.userType === "client" && (
+  <>
+    {/* Occupation */}
+    <div className="col-md-6">
+      <label className="form-label">Occupation</label>
+      <select className="form-select"
+        name="occupation" value={formData.occupation} onChange={handleChange}>
+        <option value="">Select Occupation</option>
+        <option value="business_owner">Business Owner</option>
+        <option value="student">Student</option>
+        <option value="company_director">Company Director</option>
+        <option value="freelancer">Freelancer</option>
+        <option value="retired">Retired</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
 
-</section>
-    </>
-  )}
+    {/* Service Type */}
+    <div className="col-md-6">
+      <label className="form-label">Service Type Required</label>
+      <select className="form-select"
+        name="serviceType" value={formData.serviceType} onChange={handleChange} required>
+        <option value="">Select Service</option>
+        <option value="baby sitter">Baby Sitter</option>
+        <option value="maid">Maid</option>
+        <option value="cook">Cook</option>
+      </select>
+    </div>
 
-  {/* ✅ Client extra fields */}
-  {formData.userType === "client" && (
-    <><div className="mb-3">
-        <select
-  className="form-select"
-  name="occupation"
-  value={formData.occupation}       // <- value state se bind
-  onChange={handleChange}           // <- change hone par state update
->
-  <option value="">Select Occupation</option>
-  <option value="business_owner">Business Owner</option>
-  <option value="student">Student</option>
+    {/* Required Experience */}
+    <div className="col-md-6">
+      <label className="form-label">Required Experience</label>
+      <select className="form-select"
+        name="requiredExperience" value={formData.requiredExperience} onChange={handleChange}>
+        <option value="">Select Experience</option>
+        <option value="0-1">0-1 Year</option>
+        <option value="1-3">1-3 Years</option>
+        <option value="3-5">3-5 Years</option>
+        <option value="5+">5+ Years</option>
+      </select>
+    </div>
 
+    {/* Preferred Charges Type */}
+    <div className="col-md-6">
+      <label className="form-label">Preferred Charges Type</label>
+      <select className="form-select"
+        name="preferredChargesType" value={formData.preferredChargesType} onChange={handleChange}>
+        <option value="">Select Type</option>
+        <option value="hourly">Hourly</option>
+        <option value="daily">Daily</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
 
-  <option value="company_director">Company Director</option>
-  <option value="freelancer">Freelancer</option>
-  <option value="student">Student</option>
-  <option value="retired">Retired</option>
-  <option value="other">Other</option>
-</select>
+    {/* Max Budget */}
+    <div className="col-md-6">
+      <label className="form-label">Max Budget</label>
+      <input type="number" className="form-control"
+        name="maxBudget" value={formData.maxBudget} onChange={handleChange} />
+    </div>
 
+    {/* Preferred Age */}
+    <div className="col-md-6">
+      <label className="form-label">Preferred Age</label>
+      <input type="number" className="form-control"
+        name="preferredAge" value={formData.preferredAge} onChange={handleChange} />
+    </div>
+
+    {/* Preferred Gender */}
+    <div className="col-md-6">
+      <label className="form-label">Preferred Gender</label>
+      <select className="form-select"
+        name="preferredGender" value={formData.preferredGender} onChange={handleChange}>
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="any">Any</option>
+      </select>
+    </div>
+  </>
+)}
+
+                <div className="col-12 text-center">
+                  <button type="submit" className="btn btn-primary px-5">Sign Up</button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="mb-3">
-  <label className="form-label">Service Type Required</label>
-  <select className="form-select" name="serviceType"
-   onChange={handleChange} value={formData.serviceType}   required>
-    <option value="">Select Service</option>
-    <option value="baby sitter">Baby Sitter</option>
-    <option value="maid">Maid</option>
-    <option value="cook">Cook</option>
-  </select>
-</div>
-
-<div className="mb-3">
-  <label className="form-label">Required Experience</label>
-  <select className="form-select"
-   name="requiredExperience"
-   onChange={handleChange}
-    value={formData.requiredExperience} required >
-    <option value="">Select Experience</option>
-    <option value="0-1">0–1 Year</option>
-    <option value="1-3">1–3 Years</option>
-    <option value="3-5">3–5 Years</option>
-    <option value="5+">5+ Years</option>
-  </select>
-</div>
-<div className="mb-3">
-    <label>Preferred Candidate Age</label>
-    <input 
-      type="number" 
-      name="preferredAge" 
-      className="form-control" 
-      placeholder="Enter preferred age" 
-      value={formData.preferredAge} 
-      onChange={handleChange} 
-      min="0"
-    />
-  </div>
-
-<div className="mb-3">
-  <label className="form-label">Preferred Candidate Gender</label>
-  <select className="form-select" name="preferredGender" onChange={handleChange} value={formData.preferredGender} required>
-    <option value="">Any</option>
-    <option value="male">Male</option>
-    <option value="female">Female</option>
-  </select>
-</div>{/* Required Availability */}
-<div className="mb-3">
-  <label className="form-label">Required Availability</label>
-  <select
-    className="form-select"
-    name="requiredAvailability"
-    onChange={handleChange}
-    value={formData.requiredAvailability || ""}
-    required
-  >
-    <option value="">Select Availability</option>
-    <option value="Full-time">Full-time</option>
-    <option value="Part-time">Part-time</option>
-    <option value="Weekends">Weekends</option>
-    <option value="Flexible">Flexible</option>
-  </select>
-</div>
-
-{/* Preferred Charges Type */}
-<div className="mb-3">
-  <label className="form-label">Preferred Charges Type</label>
-  <select
-    className="form-select"
-    name="preferredChargesType"
-    onChange={handleChange}
-    value={formData.preferredChargesType || ""}
-    required
-  >
-    <option value="">Select Charges Type</option>
-    <option value="hourly">Hourly</option>
-    <option value="daily">Daily</option>
-    <option value="weekly">Weekly</option>
-  </select>
-</div>
-
-{/* Budget in Rs */}
-<div className="mb-3">
-  <label className="form-label">Maximum Budget (in Rs)</label>
-  <input
-    type="number"
-    name="maxBudget"
-    className="form-control"
-    placeholder="Enter max budget in Rs"
-    value={formData.maxBudget || ""}
-    onChange={handleChange}
-    min="0"
-    required
-  />
-</div>
-
-    </>
-  )}
-
-  <button type="submit" className="btn btn-primary">
-    Sign Up
-  </button>
-</form>
-
-
     </div>
   );
 };
+
 export default SignUp;

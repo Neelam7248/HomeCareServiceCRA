@@ -17,7 +17,9 @@ const candidateSchema = new mongoose.Schema({
   charges: Number,
   experience: String,
   resume: String,
-    // ✅ Admin approval system
+  isDeleted: { type: Boolean, default: false },
+ 
+  // ✅ Admin approval system
   approved: { type: Boolean, default: false } 
 }, { timestamps: true });
 

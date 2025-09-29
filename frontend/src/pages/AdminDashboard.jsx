@@ -1,143 +1,106 @@
-// src/components/AdminDashboard.jsx
-import React, { useEffect, useState } from "react";
+// pages/AdminDashboard.js
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getToken, removeToken } from "../utils/auth";
+import OfferList from "../components/admin/OfferListA";
+import AcceptedOffer from "./../components/admin/AcceptedOfferL";
+import AdminAddUser from "../components/admin/AddCand";
+import ApproveCandidate from "../components/admin/CandApprovalModal";
+import ApproveClient from "../components/admin/ClientApprovalModal";
+import UpdateClientModal from "../components/admin/UpdateClientModal";
+import UpdateCandidateModal from "../components/admin/UpdateCandidateModal"
+import SuggestedCandidates from "../components/admin/SuggestedCandidateA";
+import ClosedJobs from "../components/admin/ClosedJobs";
 
 const AdminDashboard = () => {
-  const [candidates, setCandidates] = useState([]);
-  const [clients, setClients] = useState([]);
+  const [activeTab, setActiveTab] = useState("addUser");
   const [message, setMessage] = useState("");
+  const token = getToken();
+  const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-
-  // Fetch all users (Candidates & Clients)
+  // Auth check
   useEffect(() => {
-    if (!token) return;
-
-    const fetchUsers = async () => {
-      try {
-        const [cRes, clRes] = await Promise.all([
-          fetch("/api/signup/candidates", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/signup/clients", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const cData = await cRes.json();
-        const clData = await clRes.json();
-
-        setCandidates(cData);
-        setClients(clData);
-      } catch (err) {
-        console.error(err);
-        setMessage("Failed to fetch users");
-      }
-    };
-
-    fetchUsers();
-  }, [token]);
-
-  const handleApproval = async (userType, id, approve) => {
-    try {
-      const res = await fetch(`/api/admin/approve/${userType}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ approved: approve }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message);
-
-      setMessage(data.message);
-
-      // Update UI
-      if (userType === "candidate") {
-        setCandidates((prev) =>
-          prev.map((u) => (u._id === id ? { ...u, approved: approve } : u))
-        );
-      } else if (userType === "client") {
-        setClients((prev) =>
-          prev.map((u) => (u._id === id ? { ...u, approved: approve } : u))
-        );
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage(err.message || "Action failed");
-    }
-  };
+    if (!token) navigate("/adminsignin");
+  }, [token, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userType");
-    window.location.href = "/admin/signin";
+    removeToken();
+    navigate("/" );
+    //hamne replacetrue ker lia ha or signin page men ham useeffect istimal ker rahe ha is lea isko usekerna extra ho ga q k ye bhi wohi kam window.location.reload(); // ensures signin form resets
+
   };
 
+  // Tabs
+  const tabs = [
+    { key: "addUser", label: "Add User" },
+    { key: "approveCandidate", label: "Approve Candidate" },
+    { key: "approveClient", label: "Approve Client" },
+    { key: "updateClient", label: "UpdateClient/Delete" },
+    { key: "updateCandidate", label: "UpdateCandidate/Delete" },
+  {key:"suggestedCandidates",label:"SuggestedCandidates"},
+  {key:"offerList",label:"OfferList"},
+  
+  {key:"acceptedOffer",label:"AcceptedOffer"},
+{key:"closedJobs",label:"ClosedJobs"},
+    
+];
+
   return (
-    <div>
-      <h2>Admin Dashboard</h2>
-      <button onClick={handleLogout}>Logout</button>
-      {message && <p style={{ color: "green" }}>{message}</p>}
+    <div className="container mt-4 vh-100" style={{ backgroundColor: '#b5d0b3ff' }}>
+      <h1>Admin Portal</h1>
+      <button className="btn btn-danger mb-3" onClick={handleLogout}>
+        Logout
+      </button>
+      {message && <div className="alert alert-info">{message}</div>}
 
-      <h3>Candidates</h3>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Approved</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {candidates.map((c) => (
-            <tr key={c._id}>
-              <td>{c.name}</td>
-              <td>{c.email}</td>
-              <td>{c.approved ? "Yes" : "No"}</td>
-              <td>
-                {!c.approved && (
-                  <>
-                    <button onClick={() => handleApproval("candidate", c._id, true)}>Approve</button>
-                    <button onClick={() => handleApproval("candidate", c._id, false)}>Reject</button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Tabs */}
+      <ul className="nav nav-tabs mb-4" style={{ backgroundColor: "powderblue" }}>
+        {tabs.map((tab) => (
+          <li className="nav-item" key={tab.key}>
+            <button
+              className={`nav-link ${activeTab === tab.key ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          </li>
+        ))}
+      </ul>
 
-      <h3>Clients</h3>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Approved</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map((c) => (
-            <tr key={c._id}>
-              <td>{c.name}</td>
-              <td>{c.email}</td>
-              <td>{c.approved ? "Yes" : "No"}</td>
-              <td>
-                {!c.approved && (
-                  <>
-                    <button onClick={() => handleApproval("client", c._id, true)}>Approve</button>
-                    <button onClick={() => handleApproval("client", c._id, false)}>Reject</button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Tab content */}
+      <div>
+        {activeTab === "addUser" && <AdminAddUser />}
+        {activeTab === "approveCandidate" && <ApproveCandidate />}
+        {activeTab === "approveClient" && <ApproveClient />}
+      
+
+        {activeTab === "updateClient" && (
+          <div>
+            <h3>Update/Delete Candidate or Client</h3>
+           <UpdateClientModal/>
+          </div>
+        )}
+       
+       
+        {activeTab === "updateCandidate" && (
+          <div>
+            <h3>Update/Delete Candidate or Client</h3>
+           <UpdateCandidateModal/>
+          </div>
+        )}
+
+       { activeTab === "suggestedCandidates" && <SuggestedCandidates />}
+       { activeTab === "offerList" && <OfferList />}
+       { activeTab === "acceptedOffer" && <AcceptedOffer />}
+       { activeTab === "closedJobs" &&(
+        <div>
+        <h1>Closed jobs history</h1>
+        <ClosedJobs/>
+
+        </div>
+        )}
+        
+      </div>
     </div>
   );
 };

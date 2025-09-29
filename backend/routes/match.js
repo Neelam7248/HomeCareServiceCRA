@@ -26,7 +26,7 @@ router.get("/suggestions/:userId", async (req, res) => {
     }
 
     // Step 2: attach offer status to each candidate
-    const suggestions = await Promise.all(
+    const suggestionsWithStatus = await Promise.all(
       candidates.map(async (cand) => {
         const offer = await Offer.findOne({
           candidateId: cand._id,
@@ -40,12 +40,20 @@ router.get("/suggestions/:userId", async (req, res) => {
       })
     );
 
+    // ✅ Step 3: filter out Accepted ones (so they don’t show up in frontend)
+    const suggestions = suggestionsWithStatus.filter(
+        (s) => s.status !== "Accepted" && s.status !== "Closed"
+
+    );
+
     res.json(suggestions);
   } catch (err) {
     console.error("Error in suggestions route:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// -- GET suggested clients based on candidate skills
 router.get("/suggestions", auth, async (req, res) => {
   try {
     const candidateId = req.user.id; // JWT se candidate id
@@ -72,4 +80,7 @@ router.get("/suggestions", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+
 module.exports = router;

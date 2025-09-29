@@ -9,16 +9,25 @@ import './App.css';
 import AdminSignup from './components/AdminSignUp.jsx';   
 import AdminSignin from './components/AdminSignin.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import logo from './images/logo.png'
+import HomePage from './pages/HomePage';
+import HomeLayout from './components/HomeLayout.jsx';
 function App() {
    const clientId = '664f2b29b12f20a1cd22a123'; // ⬅️ Add this
   return (
   
       <>
-        <h1 style={{ textAlign: 'center', margin: '20px' }}>First React App based Job Portal  made by Neelam Yameen</h1>
-<Navbar/>
+       <div className="header">
+        <img src={logo} alt="Logo" width="100" height="70" />
+        <h1>Career Connect</h1>
+      </div>
+        
+
 
         <Routes>
-          <Route path="/" element={<h2>Welcome! Please choose SignIn or SignUp</h2>} />
+          {/* Home page with Navbar */}
+        <Route path="/" element={<HomeLayout><HomePage /></HomeLayout>} />
+
 
           <Route path="/adminsignup" element={<AdminSignup />} />
        <Route path="/adminsignin" element={<AdminSignin />} />

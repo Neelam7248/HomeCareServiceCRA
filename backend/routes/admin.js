@@ -3,30 +3,61 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/Admin");
-const Candidate = require("../models/Candidate");
-const Client = require("../models/Client");
-
 require("dotenv").config();
-const JWT_SECRET = process.env.JWT_SECRET;
+
+const JWT_SECRET = process.env.JWT_SECRET || "yourSecretKey";
 
 /* =============================
    ADMIN SIGNUP
 ============================= */
 router.post("/signup", async (req, res) => {
   try {
-     console.log("📩 Incoming body:", req.body);
-    const { name, email, password } = req.body;
+    const { name, email, password, adminSecret } = req.body;
 
-    const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) {
-      return res.status(400).json({ message: "Admin already exists" });
+    // Check secret code
+    if (adminSecret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ message: "Unauthorized signup attempt" });
+    }
+    // Check required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newAdmin = new Admin({ name, email, password: hashedPassword });
+
+    // Create admin
+    const newAdmin = new Admin({
+      name,
+      email,
+      password: hashedPassword
+    });
+
     await newAdmin.save();
 
-    res.status(201).json({ message: "Admin registered successfully" });
+    // Create JWT token
+    const token = jwt.sign(
+      { id: newAdmin._id, userType: "admin" },
+      JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    res.status(201).json({
+      message: "Admin signup successful",
+      token,
+      user: {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        userType: "admin"
+      }
+    });
   } catch (err) {
     console.error("Admin signup error:", err);
     res.status(500).json({ message: "Server error" });
@@ -34,53 +65,43 @@ router.post("/signup", async (req, res) => {
 });
 
 /* =============================
-   ADMIN LOGIN
+   ADMIN SIGNIN
 ============================= */
 router.post("/signin", async (req, res) => {
-  try { console.log("📩 Incoming body:", req.body);
+  try {
     const { email, password } = req.body;
 
+    // Check admin existence
     const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ message: "Invalid credentials" });
+    if (!admin) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
+    // Compare password
     const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-    const token = jwt.sign({ id: admin._id, role: "admin" }, JWT_SECRET, { expiresIn: "8h" });
+    // Create JWT token
+    const token = jwt.sign(
+      { id: admin._id, userType: "admin" },
+      JWT_SECRET,
+      { expiresIn: "8h" }
+    );
 
     res.json({
-      message: "Login successful",
+      message: "Admin login successful",
       token,
-      admin: { id: admin._id, name: admin.name, email: admin.email }
+      user: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        userType: "admin"
+      }
     });
   } catch (err) {
     console.error("Admin login error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-/* =============================
-   APPROVE / REJECT USER
-============================= */
-router.put("/approve/:userType/:id", async (req, res) => {
-  try {
-    const { userType, id } = req.params;
-    const { approved } = req.body; // true/false
-
-    let user;
-    if (userType === "candidate") {
-      user = await Candidate.findByIdAndUpdate(id, { approved }, { new: true });
-    } else if (userType === "client") {
-      user = await Client.findByIdAndUpdate(id, { approved }, { new: true });
-    } else {
-      return res.status(400).json({ message: "Invalid user type" });
-    }
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.json({ message: `User ${approved ? "approved" : "rejected"} successfully`, user });
-  } catch (err) {
-    console.error("Approval error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

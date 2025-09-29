@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { getToken } from "../../utils/auth";
@@ -29,8 +30,12 @@ const SuggestedClients = () => {
   }, []);
 
   const handleDecision = async (clientId, decision) => {
-    try {
-      await axios.post(`http://localhost:5000/api/offers/decision`, { clientId, decision });
+    try {const token = getToken();
+      await axios.post(`http://localhost:5000/api/offers/decision`,
+         
+         { clientId, decision },
+  { headers: { Authorization: `Bearer ${token}` } }
+        );
 
       setSuggestions(prev =>
         prev.map(c => (c._id === clientId ? { ...c, status: decision } : c))
